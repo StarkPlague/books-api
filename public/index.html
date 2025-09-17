@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Books API UI</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    h1 { color: #333; }
+    input, button { padding: 8px; margin: 5px; }
+    .book-card { border: 1px solid #ccc; padding: 10px; margin: 5px 0; }
+  </style>
+</head>
+<body>
+  <h1>📚 Books Manager</h1>
+
+  <h2>Add Book</h2>
+  <input type="text" id="title" placeholder="Book Title">
+  <input type="text" id="author" placeholder="Author">
+  <button onclick="addBook()">Add</button>
+
+  <h2>Book List</h2>
+  <div id="books"></div>
+
+  <script>
+    const API_URL = "/api/books";
+
+    async function getBooks() {
+      const res = await fetch(API_URL);
+      const data = await res.json();
+      const booksDiv = document.getElementById("books");
+      booksDiv.innerHTML = "";
+      data.forEach(book => {
+        booksDiv.innerHTML += `
+          <div class="book-card">
+            <strong>${book.title}</strong> - ${book.author}
+            <button onclick="editBook(${book.id}, '${book.title}', '${book.author}')">✏️ Edit</button>
+            <button onclick="deleteBook(${book.id})">❌ Delete</button>
+          </div>`;
+      });
+    }
+
+    async function addBook() {
+      const title = document.getElementById("title").value;
+      const author = document.getElementById("author").value;
+      if (!title || !author) return alert("Isi semua field!");
+
+      await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, author })
+      });
+
+      document.getElementById("title").value = "";
+      document.getElementById("author").value = "";
+      getBooks();
+    }
+
+    async function deleteBook(id) {
+      await fetch(`${API_URL}/${id}`, { method: "DELETE" });
+      getBooks();
+    }
+
+    async function editBook(id, oldTitle, oldAuthor) {
+      const title = prompt("Edit title:", oldTitle);
+      const author = prompt("Edit author:", oldAuthor);
+      if (!title || !author) return;
+
+      await fetch(`${API_URL}/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, author })
+      });
+      getBooks();
+    }
+
+    getBooks();
+  </script>
+</body>
+</html>
